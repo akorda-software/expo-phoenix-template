@@ -52,7 +52,7 @@ export function BillingScreen({
                 ? `Cancels on ${billingDate}`
                 : `Renews on ${billingDate}`}
           </Text>
-          {error ? <FormMessage tone="critical">{error}</FormMessage> : null}
+          {error ? <FormMessage tone="error">{error}</FormMessage> : null}
           {billingDate !== null &&
           (subscription.status === "canceling" || subscription.cancelAtPeriodEnd) ? (
             <FormMessage tone="info">

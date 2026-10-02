@@ -13,6 +13,14 @@ function readOptionalEnv(name: string): string | undefined {
 
 export default (): ExpoConfig => {
   const googleIosUrlScheme = readOptionalEnv("GOOGLE_IOS_URL_SCHEME");
+  const plugins: NonNullable<ExpoConfig["plugins"]> = [
+    "expo-router",
+    "expo-apple-authentication",
+    "expo-secure-store"
+  ];
+  if (googleIosUrlScheme) {
+    plugins.push(["@react-native-google-signin/google-signin", { iosUrlScheme: googleIosUrlScheme }]);
+  }
 
   return {
     name: readOptionalEnv("EXPO_APP_NAME") ?? "YourApp",
@@ -28,15 +36,10 @@ export default (): ExpoConfig => {
       package: readOptionalEnv("EXPO_ANDROID_PACKAGE") ?? "app.yourapp.mobile"
     },
     ios: {
+      usesAppleSignIn: true,
       bundleIdentifier: readOptionalEnv("EXPO_IOS_BUNDLE_IDENTIFIER") ?? "app.yourapp.mobile"
     },
-    plugins: [
-      ...(googleIosUrlScheme
-        ? [["@react-native-google-signin/google-signin", { iosUrlScheme: googleIosUrlScheme }] as const]
-        : []),
-      ["expo-apple-authentication"],
-      "expo-secure-store"
-    ],
+    plugins,
     extra: {
       apiBaseUrlAndroid: readOptionalEnv("EXPO_PUBLIC_API_BASE_URL_ANDROID"),
       apiBaseUrlIos: readOptionalEnv("EXPO_PUBLIC_API_BASE_URL_IOS"),

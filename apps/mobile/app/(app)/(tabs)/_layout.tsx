@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import type { ColorValue } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 
 import { useTheme } from "../../../src/shared/ui";
@@ -48,7 +49,7 @@ export default function TabsLayoutRoute() {
 }
 
 interface IconProps {
-  color: string;
+  color: ColorValue;
   filled: boolean;
   size: number;
 }

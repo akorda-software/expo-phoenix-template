@@ -13,7 +13,6 @@
       "vitest/globals",
       "node"
     ],
-    "baseUrl": ".",
     "paths": {
       "@your-app/contracts": [
         "../../packages/contracts/src/index.ts"

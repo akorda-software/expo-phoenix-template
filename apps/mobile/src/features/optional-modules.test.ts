@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { SessionBundle } from "@your-app/contracts";
 
 import { resolveOptionalNavigationEntries } from "./optional-modules";
 
@@ -14,7 +15,7 @@ const session = {
     roles: ["member"],
     tier: "free"
   }
-} as const;
+} satisfies SessionBundle;
 
 describe("optional modules registry", () => {
   it("hides navigation entries when the module feature flag is disabled", () => {

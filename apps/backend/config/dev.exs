@@ -5,9 +5,10 @@ config :your_app, YourApp.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
+  port: String.to_integer(System.get_env("EXPO_POSTGRES_HOST_PORT", "5500")),
   database: "your_app_dev",
   stacktrace: true,
-  show_sensitive_data_on_connection_error: true,
+  show_sensitive_data_on_connection_error: false,
   pool_size: 10
 
 # For development, we disable any cache and enable

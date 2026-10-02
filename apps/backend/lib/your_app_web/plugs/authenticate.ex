@@ -6,7 +6,7 @@ defmodule YourAppWeb.Plugs.Authenticate do
 
   import Plug.Conn
 
-  alias YourApp.Accounts
+  alias YourApp.Sessions
   alias YourApp.Auth
 
   @spec init(any()) :: any()
@@ -46,19 +46,19 @@ defmodule YourAppWeb.Plugs.Authenticate do
   end
 
   defp verify_token(token) do
-    case Phoenix.Token.verify(YourAppWeb.Endpoint, Auth.access_token_salt(), token, []) do
-      {:ok, claims} -> {:ok, claims}
-      {:error, _reason} -> {:error, :invalid_token}
+    case Phoenix.Token.verify(YourAppWeb.Endpoint, Auth.access_token_salt(), token,
+           max_age: Auth.access_token_ttl_seconds()
+         ) do
+      {:ok, %{exp: exp} = claims} when is_integer(exp) ->
+        if exp > System.os_time(:second), do: {:ok, claims}, else: {:error, :invalid_token}
+
+      _ ->
+        {:error, :invalid_token}
     end
   end
 
-  defp fetch_user(%{sub: user_id}) do
-    case Accounts.get_user!(user_id) do
-      user -> {:ok, user}
-    end
-  rescue
-    Ecto.NoResultsError -> {:error, :user_not_found}
-  end
+  defp fetch_user(%{sub: user_id, session_id: session_id}),
+    do: Sessions.active_session_user(user_id, session_id)
 
   defp fetch_user(_claims), do: {:error, :invalid_claims}
 

@@ -1,0 +1,6 @@
+# Keep app-local Expo tooling aware of generated state in this monorepo.
+.expo/
+android/
+ios/
+dist/
+build/

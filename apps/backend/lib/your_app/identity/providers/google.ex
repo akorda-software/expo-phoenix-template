@@ -12,6 +12,7 @@ defmodule YourApp.Identity.Providers.Google do
     with {:ok, provider_config} <- provider_config(),
          {:ok, %{header: header, claims: claims}} <-
            JwtVerifier.verify(provider_token, provider_config),
+         :ok <- verified_email(claims),
          {:ok, subject} <- required_claim(claims, "sub"),
          {:ok, email} <- required_claim(claims, "email") do
       {:ok,
@@ -30,6 +31,9 @@ defmodule YourApp.Identity.Providers.Google do
   end
 
   def verify(_params), do: {:error, :invalid_provider_token}
+
+  defp verified_email(%{"email_verified" => true}), do: :ok
+  defp verified_email(_claims), do: {:error, :invalid_provider_token}
 
   defp provider_config do
     provider_config = YourApp.Auth.provider_config(:google)

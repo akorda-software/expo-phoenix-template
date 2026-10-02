@@ -26,6 +26,19 @@ if config_env() == :dev do
   end)
 end
 
+# The dev dotenv loader runs after config/dev.exs. Apply connection overrides here
+# so host processes and the optional Compose backend use the correct address.
+if config_env() == :dev do
+  case System.get_env("DATABASE_URL") do
+    url when is_binary(url) and url != "" ->
+      config :your_app, YourApp.Repo, url: url
+
+    _ ->
+      config :your_app, YourApp.Repo,
+        port: String.to_integer(System.get_env("EXPO_POSTGRES_HOST_PORT", "5500"))
+  end
+end
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
@@ -46,7 +59,10 @@ if System.get_env("PHX_SERVER") do
   config :your_app, YourAppWeb.Endpoint, server: true
 end
 
-config :your_app, YourAppWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+default_port = if config_env() == :dev, do: "4070", else: "4000"
+
+config :your_app, YourAppWeb.Endpoint,
+  http: [port: String.to_integer(System.get_env("PORT", default_port))]
 
 subscriptions_enabled? = System.get_env("ENABLE_SUBSCRIPTIONS") == "true"
 

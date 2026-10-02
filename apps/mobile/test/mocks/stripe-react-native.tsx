@@ -1,8 +1,9 @@
 import type { PropsWithChildren } from "react";
 import { vi } from "vitest";
 
-export const initPaymentSheetMock = vi.fn(async () => ({ error: undefined }));
-export const presentPaymentSheetMock = vi.fn(async () => ({ error: undefined }));
+type PaymentSheetResult = { error?: { code: string; message: string } };
+export const initPaymentSheetMock = vi.fn(async (): Promise<PaymentSheetResult> => ({}));
+export const presentPaymentSheetMock = vi.fn(async (): Promise<PaymentSheetResult> => ({}));
 
 export function StripeProvider({ children }: PropsWithChildren) {
   return <>{children}</>;

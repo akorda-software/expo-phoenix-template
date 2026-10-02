@@ -40,6 +40,29 @@ defmodule YourApp.SessionsTest do
   end
 
   describe "refresh_session/1" do
+    test "a revoked replacement token cannot refresh" do
+      user = create_user!()
+      {:ok, issued} = Sessions.issue_session(user, device_attrs())
+      {:ok, refreshed} = Sessions.refresh_session(issued.session.refresh_token)
+
+      assert {:error, :refresh_token_reused} =
+               Sessions.refresh_session(issued.session.refresh_token)
+
+      assert {:error, :session_revoked} =
+               Sessions.refresh_session(refreshed.session.refresh_token)
+    end
+
+    test "a token expiring now cannot refresh" do
+      user = create_user!()
+      {:ok, issued} = Sessions.issue_session(user, device_attrs())
+
+      Repo.update_all(RefreshToken,
+        set: [expires_at: DateTime.utc_now() |> DateTime.truncate(:second)]
+      )
+
+      assert {:error, :session_revoked} = Sessions.refresh_session(issued.session.refresh_token)
+    end
+
     test "rotates the refresh token and invalidates the prior token" do
       user = create_user!()
       {:ok, issued} = Sessions.issue_session(user, device_attrs())

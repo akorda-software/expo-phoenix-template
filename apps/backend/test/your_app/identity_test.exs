@@ -18,6 +18,18 @@ defmodule YourApp.IdentityTest do
   end
 
   describe "resolve_provider_login/2" do
+    test "rejects Google logins without a verified email", %{provider_config: config} do
+      for verified <- [false, nil, "true", 1] do
+        token =
+          ProviderTokenFactory.google_token!(config.google_key, %{"email_verified" => verified})
+
+        assert {:error, :invalid_provider_token} =
+                 Identity.resolve_provider_login(:google, %{provider_token: token})
+      end
+
+      assert Repo.aggregate(User, :count, :id) == 0
+    end
+
     test "creates the user and provider identity on first login", %{
       provider_config: provider_config
     } do

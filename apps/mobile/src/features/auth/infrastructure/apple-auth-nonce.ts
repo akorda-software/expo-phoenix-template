@@ -1,19 +1,9 @@
 import * as Crypto from "expo-crypto";
 
-interface CryptoModule {
-  CryptoDigestAlgorithm: {
-    SHA256: string;
-  };
-  CryptoEncoding: {
-    HEX: string;
-  };
-  getRandomBytes(length: number): Uint8Array;
-  digestStringAsync(
-    algorithm: string,
-    data: string,
-    options: { encoding: string }
-  ): Promise<string>;
-}
+type CryptoModule = Pick<typeof Crypto, "getRandomBytes" | "digestStringAsync"> & {
+  CryptoDigestAlgorithm: Pick<typeof Crypto.CryptoDigestAlgorithm, "SHA256">;
+  CryptoEncoding: Pick<typeof Crypto.CryptoEncoding, "HEX">;
+};
 
 export async function createAppleAuthNonce(cryptoModule: CryptoModule = Crypto) {
   const rawNonce = bytesToHex(cryptoModule.getRandomBytes(32));

@@ -10,6 +10,24 @@ defmodule YourApp.Sessions do
   alias YourApp.Sessions.RefreshToken
   alias YourApp.Sessions.SessionFamily
 
+  def active_session_user(user_id, session_id) do
+    with {:ok, user_id} <- Ecto.UUID.cast(user_id),
+         {:ok, session_id} <- Ecto.UUID.cast(session_id),
+         %SessionFamily{user: %User{} = user} <-
+           Repo.one(
+             from(family in SessionFamily,
+               where:
+                 family.id == ^session_id and family.user_id == ^user_id and
+                   is_nil(family.revoked_at),
+               preload: [:user]
+             )
+           ) do
+      {:ok, user}
+    else
+      _ -> {:error, :session_revoked}
+    end
+  end
+
   def issue_session(%User{} = user, device_attrs) do
     current_time = now()
 
@@ -40,8 +58,24 @@ defmodule YourApp.Sessions do
   end
 
   def refresh_session(plain_refresh_token) when is_binary(plain_refresh_token) do
-    token = get_refresh_token(plain_refresh_token)
+    # Serialize refresh and logout for the whole family, then re-read the token.
+    # Reading before a lock allowed concurrent requests to rotate the same token twice.
+    {:ok, result} =
+      Repo.transaction(fn ->
+        case get_refresh_token(plain_refresh_token) do
+          nil ->
+            {:error, :invalid_refresh_token}
 
+          token ->
+            lock_family(token.session_family_id)
+            refresh_locked_token(get_refresh_token(plain_refresh_token))
+        end
+      end)
+
+    result
+  end
+
+  defp refresh_locked_token(token) do
     cond do
       is_nil(token) ->
         {:error, :invalid_refresh_token}
@@ -53,7 +87,7 @@ defmodule YourApp.Sessions do
       token.status == "revoked" or token.session_family.revoked_at != nil ->
         {:error, :session_revoked}
 
-      DateTime.compare(token.expires_at, now()) == :lt ->
+      DateTime.compare(token.expires_at, now()) != :gt ->
         revoke_family(token.session_family_id)
         {:error, :session_revoked}
 
@@ -104,7 +138,9 @@ defmodule YourApp.Sessions do
   end
 
   defp build_session(user, session_id, refresh_token) do
-    access_token_expires_at = DateTime.add(now(), YourApp.Auth.access_token_ttl_seconds(), :second)
+    access_token_expires_at =
+      DateTime.add(now(), YourApp.Auth.access_token_ttl_seconds(), :second)
+
     refresh_token_expires_at = DateTime.add(now(), YourApp.Auth.refresh_token_ttl_days(), :day)
 
     %{
@@ -173,6 +209,19 @@ defmodule YourApp.Sessions do
   end
 
   defp revoke_family(session_family_id) do
+    Repo.transaction(fn ->
+      lock_family(session_family_id)
+      revoke_locked_family(session_family_id)
+    end)
+
+    :ok
+  end
+
+  defp lock_family(id) do
+    Repo.one!(from(family in SessionFamily, where: family.id == ^id, lock: "FOR UPDATE"))
+  end
+
+  defp revoke_locked_family(session_family_id) do
     revoked_at = now()
 
     from(session_family in SessionFamily, where: session_family.id == ^session_family_id)

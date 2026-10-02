@@ -18,7 +18,7 @@ export function SubscriptionFeatureProvider({ children }: PropsWithChildren) {
 
     const httpClient = createJsonHttpClient({
       apiBaseUrl,
-      getHeaders: () =>
+      getHeaders: (): Record<string, string> =>
         accessToken === null
           ? {}
           : {

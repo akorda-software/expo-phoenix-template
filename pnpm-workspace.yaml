@@ -1,3 +1,14 @@
 packages:
   - apps/*
   - packages/*
+overrides:
+  lightningcss: 1.27.0
+  lightningcss-linux-x64-gnu: 1.27.0
+  # Xcode uses only uuid.v4; v11 retains CommonJS and fixes buffer bounds checks.
+  'xcode>uuid': 11.1.1
+  # Router's parse/stringify APIs are retained; v9 uses the fixed URI decoder.
+  'expo-router>query-string': 9.5.1
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@types/node@24.19.1'

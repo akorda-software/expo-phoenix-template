@@ -113,5 +113,12 @@ defmodule YourApp.Identity.JwtVerifierTest do
 
   test "rejects malformed JWT payloads", %{verifier_opts: verifier_opts} do
     assert {:error, :invalid_provider_token} = JwtVerifier.verify("broken.token", verifier_opts)
+
+    for payload <- ["null", "[]", "42", "\"string\""] do
+      segment = Base.url_encode64(payload, padding: false)
+
+      assert {:error, :invalid_provider_token} =
+               JwtVerifier.verify("#{segment}.#{segment}.AA", verifier_opts)
+    end
   end
 end

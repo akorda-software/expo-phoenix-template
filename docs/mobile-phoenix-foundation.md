@@ -2,8 +2,8 @@
 
 ## Local setup
 
-1. `pnpm install`
-2. `docker compose -f infra/docker-compose.yml up -d postgres`
+1. `pnpm install --frozen-lockfile`
+2. `docker compose --env-file infra/.env.dev.example -f infra/docker-compose.yml up -d --wait postgres`
 3. `pnpm test:mobile`
 4. `pnpm test:backend`
 
@@ -13,19 +13,24 @@ Phoenix owns provider validation, identity resolution, user creation, session is
 
 - Google mobile sign-in must produce a backend callback payload with `providerToken` and device metadata.
 - Apple sign-in must include `providerToken`, `authorizationCode`, `idToken`, `nonce`, and device metadata.
-- The current foundation uses provider modules under `apps/backend/lib/your_app/identity/providers/` so production-grade JWT/JWKS validation can replace the stubbed foundation rules without changing controller or context boundaries.
+- Provider modules under `apps/backend/lib/your_app/identity/providers/` validate signed JWTs using provider JWKS, issuer, audience and expiration. Google requires verified email; Apple validates the hashed nonce. Configure real per-app client IDs before native sign-in.
 
 ## Version matrix
 
 | Surface | Version |
 | --- | --- |
-| Node.js | `22.15.1` (`.nvmrc`) |
-| pnpm | `10.33.0` (`packageManager`) |
-| TypeScript | `5.9.3` |
-| Vitest | `3.2.4` |
-| Elixir | `1.18` |
-| Phoenix | `1.8.3` |
-| PostgreSQL | `17` (`infra/docker-compose.yml`) |
+| Node.js | `24.19.0` (`.nvmrc`) |
+| pnpm | `12.8.1` (`packageManager`) |
+| Expo / React Native | `57.0.26` / `0.86.3` |
+| TypeScript | `6.0.3` |
+| Vitest | `5.0.3` |
+| Elixir / OTP | `1.20.4` / `29.1.1` |
+| Phoenix / LiveView | `1.8.15` / `1.2.12` |
+| PostgreSQL | `17.11` (`infra/docker-compose.yml`) |
+
+Host API: `127.0.0.1:4070`; PostgreSQL: `127.0.0.1:5500`.
+Ignored native directories need a backed-up, clean prebuild and a new development
+client after upgrading SDKs; see the root README.
 
 ## Flow summary
 

@@ -31,7 +31,10 @@ describe("mobile runtime config", () => {
       "react-native-reanimated": expect.any(String),
       "react-native-worklets": expect.any(String)
     });
-    expect(packageJson.dependencies?.["react-native-worklets"]).toMatch(/^0\.5\./);
+    const bundled = JSON.parse(await readFile(path.join(mobileDir, "node_modules/expo/bundledNativeModules.json"), "utf8")) as Record<string, string>;
+    for (const dependency of ["react", "react-native", "react-native-worklets", "react-native-reanimated"]) {
+      expect(packageJson.dependencies?.[dependency]).toBe(bundled[dependency]);
+    }
   });
 
   it("stops aliasing expo-router to the local test shim", async () => {

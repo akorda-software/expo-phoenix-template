@@ -53,6 +53,7 @@ defmodule YourApp.TestSupport.ProviderTokenFactory do
         "aud" => "yourapp-google-client-id",
         "sub" => "google-user-123",
         "email" => "google-user@example.com",
+        "email_verified" => true,
         "name" => "Google User",
         "iat" => now,
         "exp" => now + 3600
